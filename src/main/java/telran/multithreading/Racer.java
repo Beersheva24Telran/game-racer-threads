@@ -1,10 +1,12 @@
 package telran.multithreading;
 
+import java.time.Instant;
 import java.util.Random;
 
 public class Racer extends Thread {
 private Race race;
 private int number;
+private Instant finishTime;
 public Racer(Race race, int number) {
 	this.race = race;
 	this.number = number;
@@ -21,6 +23,20 @@ public void run() {
 			System.out.printf("%d - step %d\n",number, i);
 		} catch (InterruptedException e) {}
 	}
-	race.winner.compareAndSet(-1, number);
+		synchronized(race) {
+		finishTime = Instant.now();
+		finishRace();
+	}
+}
+private void finishRace() {
+	race.getResultsTable().add(this);
+
+}
+public Instant getFinsishTime() {
+	return finishTime;
+
+}
+public int getNumber() {
+	return number;
 }
 }
