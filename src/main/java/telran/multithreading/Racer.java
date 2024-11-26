@@ -4,39 +4,49 @@ import java.time.Instant;
 import java.util.Random;
 
 public class Racer extends Thread {
-private Race race;
-private int number;
-private Instant finishTime;
-public Racer(Race race, int number) {
-	this.race = race;
-	this.number = number;
-}
-@Override
-public void run() {
-	int minSleep = race.getMinSleep();
-	int maxSleep = race.getMaxSleep();
-	int distance = race.getDistance();
-	Random random = new Random();
-	for (int i = 0; i < distance; i++) {
+	private Race race;
+	private int number;
+	private Instant finishTime;
+
+	public Racer(Race race, int number) {
+		this.race = race;
+		this.number = number;
+	}
+
+	@Override
+	public void run() {
+		int minSleep = race.getMinSleep();
+		int maxSleep = race.getMaxSleep();
+		int distance = race.getDistance();
+		Random random = new Random();
+		for (int i = 0; i < distance; i++) {
+			try {
+				sleep(random.nextInt(minSleep, maxSleep + 1));
+				System.out.printf("%d - step %d\n", number, i);
+			} catch (InterruptedException e) {
+			}
+		}
 		try {
-			sleep(random.nextInt(minSleep, maxSleep + 1));
-			System.out.printf("%d - step %d\n",number, i);
-		} catch (InterruptedException e) {}
-	}
-		synchronized(race) {
-		finishTime = Instant.now();
-		finishRace();
-	}
-}
-private void finishRace() {
-	race.getResultsTable().add(this);
+			race.lock.lock();
+			finishTime = Instant.now();
+			finishRace();
 
-}
-public Instant getFinsishTime() {
-	return finishTime;
+		} finally {
+			race.lock.unlock();
+		}
+	}
 
-}
-public int getNumber() {
-	return number;
-}
+	private void finishRace() {
+		race.getResultsTable().add(this);
+
+	}
+
+	public Instant getFinsishTime() {
+		return finishTime;
+
+	}
+
+	public int getNumber() {
+		return number;
+	}
 }
